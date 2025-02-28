@@ -19,13 +19,13 @@ public class GestionAffichage
 {
     private Handler notifHandler;
     private Context context;
-    private Vibrator vibration;
+    private Vibrator vibreur;
     // Bleu clair
 
     public GestionAffichage(Context contextPass){
         context = contextPass;
         notifHandler = new Handler(Looper.getMainLooper());
-        vibration = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
+        vibreur = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
     }
 
     //**************************************************
@@ -36,8 +36,8 @@ public class GestionAffichage
         notifHandler.post(new Runnable() {
             @Override
             public void run() {
-                int largeurNomProduit = 1500;
-                int largeurNombreProduit =100;
+                int largeurNomProduit = 510;
+                int largeurNombreProduit =60;
                 LinearLayout.LayoutParams parametreAffichage;
                 GradientDrawable bord;
                 try {
@@ -55,7 +55,7 @@ public class GestionAffichage
                         conteneurProduit.setOrientation(LinearLayout.HORIZONTAL);
                         // Definition du bord noir interieur en blanc
                         bord = new GradientDrawable();
-                        bord.setColor(Color.WHITE/*MainActivity.gestionDonnees.produitDebutCouleur*/);
+                        bord.setColor(MainActivity.gestionDonnees.produitDebutCouleur);
                         bord.setStroke(2, Color.BLACK);
                         conteneurProduit.setBackground(bord);
                         // Rajout de la ligne a la vue
@@ -63,14 +63,14 @@ public class GestionAffichage
                         // creer la view du nom du produit
                         TextView affiNomProduit = new TextView(context);
                         parametreAffichage = new LinearLayout.LayoutParams(largeurNomProduit, LinearLayout.LayoutParams.WRAP_CONTENT);
-                        //parametreAffichage.setMargins(0, 1, 2, 0);
+                        parametreAffichage.setMargins(2, 0, 0, 0);
                         affiNomProduit.setLayoutParams(parametreAffichage);
                         affiNomProduit.setText((String) MainActivity.gestionDonnees.listeProduit.get(chaqueProduit.getKey()));
                         conteneurProduit.addView(affiNomProduit);
                         // Creer la view de la quantite voulue
                         TextView affiQtyVoulue = new TextView(context);
                         parametreAffichage = new LinearLayout.LayoutParams(largeurNombreProduit, LinearLayout.LayoutParams.WRAP_CONTENT);
-                        //parametreAffichage.setMargins(0, 1, 2, 0);
+                        parametreAffichage.setMargins(5, 0, 0, 0);
                         affiQtyVoulue.setLayoutParams(parametreAffichage);
                         affiQtyVoulue.setText(String.valueOf(chaqueProduit.getValue().get(0)));
                         affiQtyVoulue.setTextSize(15);
@@ -78,7 +78,7 @@ public class GestionAffichage
                         // Cree la view de la quantite faite
                         TextView affiQtyFaite = new TextView(context);
                         parametreAffichage = new LinearLayout.LayoutParams(largeurNombreProduit, LinearLayout.LayoutParams.WRAP_CONTENT);
-                        //parametreAffichage.setMargins(0, 1, 2, 0);
+                        parametreAffichage.setMargins(5, 0, 2, 0);
                         affiQtyFaite.setLayoutParams(parametreAffichage);
                         affiQtyFaite.setText(String.valueOf(chaqueProduit.getValue().get(1)));
                         affiQtyFaite.setTextSize(15);
@@ -205,7 +205,11 @@ public class GestionAffichage
             public void run() {
                 try {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        vibration.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)); }
+                        vibreur.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+                    }
+                    else {
+                        vibreur.vibrate(500);
+                    }
                     MainActivity.alerte.setText(messageAffi);
                     MainActivity.alerte.setVisibility(TextView.VISIBLE);
                 }

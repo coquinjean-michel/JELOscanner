@@ -175,6 +175,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     vibreur.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
                 }
+                else {
+                    vibreur.vibrate(500);
+                }
                 apparenceDialogue = new AlertDialog.Builder(this);
                 apparenceDialogue.setTitle("Chargement fichier global");
                 apparenceDialogue.setMessage("Voulez vous charger le nouveau fichier ?");
@@ -191,6 +194,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         dialog.cancel();
                     }
                 });
+                apparenceDialogue.show();
             }
             else {
                 LectureFichierGlobal();
@@ -259,6 +263,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibreur.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+        }
+        else {
+            vibreur.vibrate(500);
         }
         apparenceDialogue = new AlertDialog.Builder(this);
         apparenceDialogue.setTitle(titre);
