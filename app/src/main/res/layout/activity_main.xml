@@ -7,19 +7,40 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <Button
+        android:id="@+id/boutonFerme"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="2dp"
+        android:layout_marginLeft="2dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="FERMER" />
     <TextView
         android:id="@+id/machineChargement"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/boutonFerme"
+        android:layout_toLeftOf="@+id/boutonFichier"
         android:layout_marginTop="2dp"
-        android:layout_marginLeft="5dp"
-        android:layout_marginRight="5dp"
-        android:textStyle="bold"
+        android:layout_marginLeft="2dp"
+        android:layout_marginRight="2dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ic_bordure_nom_machine_debut"
         android:gravity="center"
         android:padding="10dp"
-        android:background="@drawable/ic_bordure_nom_machine_debut"
         android:text="AUCUNE MACHINE SCANNEE"
-        android:textSize="30dp" />
+        android:textSize="30dp"
+        android:textStyle="bold" />
+    <Button
+        android:id="@+id/boutonFichier"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="2dp"
+        android:layout_marginRight="2dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="FICHIER" />
 
     <ScrollView
         android:layout_below="@+id/machineChargement"

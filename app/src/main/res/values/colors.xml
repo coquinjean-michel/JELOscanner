@@ -2,7 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="nomMachineDebut">#FF73FBFD</color>
+    <color name="nomMachineDebut">#7EA5AD</color>
     <color name="nomMachineFinie">#4BE74F</color>
     <color name="fondProduit">#FFFFFFFF</color>
     <color name="couleurAlerte">#FFFF1200</color>

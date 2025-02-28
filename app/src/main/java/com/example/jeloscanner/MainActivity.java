@@ -10,11 +10,11 @@ import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.core.app.ActivityCompat;
 
-public class MainActivity extends AppCompatActivity
-{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     // Variable globales
     public static GestionFichier gestionFichier;
     public static GestionDonnees gestionDonnees;
@@ -23,21 +23,29 @@ public class MainActivity extends AppCompatActivity
     public static View fenetrePrincipale;
     public static TextView alerte;
     public static TextView nomMachine;
+
     // Variable locales
     private AlertDialog.Builder apparenceDialogue;
     private Intent intentPerso;
+    private Button boutonFermer;
+    private Button boutonFichier;
+    private Vibrator vibreur;
 
     //############################################
     // FONCTION ANDROID
     //############################################
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        fenetrePrincipale =  findViewById(R.id.listeProduit);
-        alerte =  findViewById(R.id.Alerte);
+        fenetrePrincipale = findViewById(R.id.listeProduit);
+        alerte = findViewById(R.id.Alerte);
         nomMachine = findViewById(R.id.machineChargement);
+        boutonFermer = findViewById(R.id.boutonFerme);
+        boutonFermer.setOnClickListener(this);
+        boutonFichier = findViewById(R.id.boutonFichier);
+        boutonFichier.setOnClickListener(this);
+        vibreur = (Vibrator) getSystemService(this.VIBRATOR_SERVICE);
 
         // declaration de toutes les classe
         gestionFichier = new GestionFichier();
@@ -49,20 +57,62 @@ public class MainActivity extends AppCompatActivity
         DemarrageBluetooth();
     }
 
-    protected void onPause(Bundle savedInstanceState)
-    {
+    protected void onPause(Bundle savedInstanceState) {
         stopService(intentPerso);
     }
 
-    protected void onResume(Bundle savedInstanceState)
-    {
+    protected void onResume(Bundle savedInstanceState) {
         TestAutorisation();
     }
 
-    public void FermeLeProgramme()
-    {
+    public void FermeLeProgramme() {
+        MainActivity.gestionFichier.EcritLogJelo("Fermeture du programme");
         stopService(intentPerso);
         finish();
+    }
+
+    @Override
+    public void onClick(View v) {
+        int but;
+
+        but = v.getId();
+        // Confirme la fermeture du programme
+        if(but == R.id.boutonFerme) {
+            apparenceDialogue = new AlertDialog.Builder(this);
+            apparenceDialogue.setTitle("FERMETURE PROGRAMME");
+            apparenceDialogue.setMessage("Voulez quitter le programme ?");
+            apparenceDialogue.setCancelable(false);
+            apparenceDialogue.setPositiveButton("OUI", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    FermeLeProgramme();
+                    dialog.cancel();
+                }
+            });
+            apparenceDialogue.setNegativeButton("NON", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            apparenceDialogue.show();
+        }
+        if(but == R.id.boutonFichier) {
+            apparenceDialogue = new AlertDialog.Builder(this);
+            apparenceDialogue.setTitle("CHARGEMENT FICHIER");
+            apparenceDialogue.setMessage("Voulez ecraser le fichier existant ?");
+            apparenceDialogue.setCancelable(false);
+            apparenceDialogue.setPositiveButton("OUI", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    TelechargementFichierGlobal();
+                    dialog.cancel();
+                }
+            });
+            apparenceDialogue.setNegativeButton("NON", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            apparenceDialogue.show();
+        }
     }
     //############################################
 
@@ -122,33 +172,31 @@ public class MainActivity extends AppCompatActivity
             // Si le fichier global avec la date d'aujourd'hui n'existe pas, demander si on veut le charger
             if(gestionFichier.VerifieGlobalChargeAujour() == false) {
                 MainActivity.gestionFichier.EcritLogJelo("Aucun telechargement du fichier global aujourd'hui");
-                Vibrator v = (Vibrator) getSystemService(this.VIBRATOR_SERVICE);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+                    vibreur.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
                 }
                 apparenceDialogue = new AlertDialog.Builder(this);
-                apparenceDialogue.setCancelable(false);
                 apparenceDialogue.setTitle("Chargement fichier global");
-                apparenceDialogue.setMessage("Le fichier global n'est pas a jour\nVoulez vous charger le nouveau fichier ?");
-                apparenceDialogue.setPositiveButton("Oui", dialogueReponse);
-                apparenceDialogue.setNegativeButton("Non", dialogueReponse);
-                apparenceDialogue.show();
+                apparenceDialogue.setMessage("Voulez vous charger le nouveau fichier ?");
+                apparenceDialogue.setCancelable(false);
+                apparenceDialogue.setPositiveButton("OUI", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        TelechargementFichierGlobal();
+                        dialog.cancel();
+                    }
+                });
+                apparenceDialogue.setNegativeButton("NON", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        LectureFichierGlobal();
+                        dialog.cancel();
+                    }
+                });
             }
             else {
                 LectureFichierGlobal();
             }
         }
     }
-    DialogInterface.OnClickListener dialogueReponse = (dialog, which) -> {
-        switch (which) {
-            case DialogInterface.BUTTON_POSITIVE:
-                TelechargementFichierGlobal();
-                break;
-            case DialogInterface.BUTTON_NEGATIVE:
-                LectureFichierGlobal();
-                break;
-        }
-    };
     //**************************************************
 
     //**************************************************
@@ -209,9 +257,8 @@ public class MainActivity extends AppCompatActivity
     //**************************************************
     private void DialogueErreurCritique(String titre, String message)
     {
-        Vibrator v = (Vibrator) getSystemService(this.VIBRATOR_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+            vibreur.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
         }
         apparenceDialogue = new AlertDialog.Builder(this);
         apparenceDialogue.setTitle(titre);

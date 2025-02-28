@@ -19,11 +19,13 @@ public class GestionAffichage
 {
     private Handler notifHandler;
     private Context context;
+    private Vibrator vibration;
     // Bleu clair
 
     public GestionAffichage(Context contextPass){
         context = contextPass;
         notifHandler = new Handler(Looper.getMainLooper());
+        vibration = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
     }
 
     //**************************************************
@@ -53,7 +55,7 @@ public class GestionAffichage
                         conteneurProduit.setOrientation(LinearLayout.HORIZONTAL);
                         // Definition du bord noir interieur en blanc
                         bord = new GradientDrawable();
-                        bord.setColor(MainActivity.gestionDonnees.produitDebutCouleur);
+                        bord.setColor(Color.WHITE/*MainActivity.gestionDonnees.produitDebutCouleur*/);
                         bord.setStroke(2, Color.BLACK);
                         conteneurProduit.setBackground(bord);
                         // Rajout de la ligne a la vue
@@ -202,7 +204,6 @@ public class GestionAffichage
             @Override
             public void run() {
                 try {
-                    Vibrator vibration = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         vibration.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)); }
                     MainActivity.alerte.setText(messageAffi);
