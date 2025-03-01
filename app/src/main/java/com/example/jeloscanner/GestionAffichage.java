@@ -96,6 +96,22 @@ public class GestionAffichage
     //**************************************************
 
     //**************************************************
+    // Efface l'ecran et remet a zero l'affichage
+    //**************************************************
+    public void RemetEcranZero()
+    {
+        notifHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                ((LinearLayout) MainActivity.fenetrePrincipale).removeAllViews();
+                MainActivity.nomMachine.setText("AUCUNE MACHINE SCANNEE");
+                MainActivity.nomMachine.setBackground(context.getDrawable(R.drawable.ic_bordure_nom_machine_debut));
+            }
+        });
+    }
+    //**************************************************
+
+    //**************************************************
     // Reset les couleurs des lignes
     //**************************************************
     public void RemetCouleurLignePardefaut()

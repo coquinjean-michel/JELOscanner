@@ -28,8 +28,6 @@ public class GestionDonnees
     public int quantiteCharge;
     // Quantité totale attendue pour cette machine A SAUVEGARDER
     public int quantiteVoulue;
-    // Etat de chargement en cours ou non A SAUVEGARDER
-    public Boolean chargementEnCours = false;
     // Id de la machine en cours A SAUVEGARDER
     public String idMachineEnCours;
     //**************************************************
@@ -39,6 +37,8 @@ public class GestionDonnees
     public ArrayList<String> listeMachineFinis= new ArrayList<>();
     // Liste des produits chargés pour evité les doublons key = numOrdreProduit value = idMachine ou il a ete chargé  A SAUVEGARDER
     public HashMap<String, String> listeProduitCharges= new HashMap<>();
+    // Etat de chargement en cours ou non A SAUVEGARDER
+    public Boolean chargementEnCours = false;
     //**************************************************
     // VARIABLES DE l'ENCOURS
     //**************************************************
@@ -60,6 +60,17 @@ public class GestionDonnees
     GestionDonnees()
     {
     }
+
+    //**************************************************
+    // Remet les donnees a zero
+    //**************************************************
+    public void RemetZeroDonnees()
+    {
+        listeMachineFinis.clear();
+        listeProduitCharges.clear();
+        chargementEnCours = false;
+    }
+    //**************************************************
 
     //**************************************************
     // Analyse de la donnee recue par le scanner

@@ -58,12 +58,14 @@ public class GestionBlueTooth
                 mmInStream = mmSocket.getInputStream();
             }
             else
-                erreur = "impossible de trouver le scanner";
+                erreur = "impossible de trouver le scanner !";
         }
         catch (Exception e) {
             pb = true;
-            erreur = "Erreur durant l'initialisation du scanner bluetooth: "+ e.getMessage();
+            erreur = "Erreur durant l'initialisation du bluetooth: "+ e.getMessage();
         }
+        if(pb == true)
+            MainActivity.gestionFichier.EcritLogJelo(erreur);
         return (pb);
     }
     //**************************************************

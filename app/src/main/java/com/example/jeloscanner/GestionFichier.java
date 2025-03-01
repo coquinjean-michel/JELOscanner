@@ -1,12 +1,19 @@
 package com.example.jeloscanner;
 
 import android.os.Environment;
+import android.util.Log;
+
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -16,6 +23,7 @@ public class GestionFichier
 {
     // Contient le message d'erreur a transmettre
     public String erreur;
+    public Boolean erreurChargementFichier = false;
     private SimpleDateFormat dateCouranteFormat;
     private SimpleDateFormat heureCouranteFormat;
 
@@ -154,6 +162,8 @@ public class GestionFichier
             erreur = "pb le fichier global n'existe pas";
             pb = true;
         }
+        if(pb == true)
+            MainActivity.gestionFichier.EcritLogJelo(erreur);
         return(pb);
     }
     //**************************************************
@@ -207,6 +217,7 @@ public class GestionFichier
                 bufferedReader.close();
             }
             catch (IOException e) {
+                MainActivity.gestionFichier.EcritLogJelo("pb de lecture du fichier datefichier: " + e.getMessage());
                 erreur = "pb de lecture du fichier datefichier: " + e.getMessage();
                 pb = false;
             }
@@ -234,7 +245,8 @@ public class GestionFichier
             writer.close();
         }
         catch (IOException e) {
-            erreur = "pb d'ecriture du fichier datefichier': " + e.getMessage();
+            MainActivity.gestionFichier.EcritLogJelo("pb d'ecriture du fichier datefichier: " + e.getMessage());
+            erreur = "pb d'ecriture du fichier datefichier: " + e.getMessage();
             pb = true;
         }
         return(pb);
@@ -260,10 +272,58 @@ public class GestionFichier
             writer.close();
         }
         catch (IOException e) {
-            erreur = "pb d'ecriture du fichier log': " + e.getMessage();
+            MainActivity.gestionFichier.EcritLogJelo("pb d'ecriture du fichier log: " + e.getMessage());
+            erreur = "pb d'ecriture du fichier log: " + e.getMessage();
             pb = true;
         }
         return(pb);
+    }
+    //**************************************************
+
+    //**************************************************
+    // Telecharge le fichier Ocerall.csv du reseau
+    //**************************************************
+    public void TelechargeFichierGlobal(){
+        File fichier;
+        FileOutputStream writer;
+        File chemin;
+        ArrayList<String> ligneExterneLue = new ArrayList<>();
+
+        Thread telechargement = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    // Chargement des donnees distantes
+                    URL url = new URL("http://192.168.1.44/Ocerall.csv");
+                    InputStreamReader inputStreamReader = new InputStreamReader(url.openStream(), StandardCharsets.ISO_8859_1);
+                    BufferedReader fluxEntrant = new BufferedReader(inputStreamReader);
+                    String ligneCourante;
+
+                    while((ligneCourante = fluxEntrant.readLine()) != null) {
+                        ligneExterneLue.add(ligneCourante);
+                    }
+                } catch (Exception e) {
+                    erreur = "Erreur de telechargement de fichier global: " + e.getMessage();
+                    erreurChargementFichier = true;
+                    MainActivity.gestionFichier.EcritLogJelo("Erreur de telechargement de fichier global: " + e.getMessage());
+                }
+            }
+        });
+        telechargement.start();
+        try {
+            telechargement.join();
+            chemin = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            fichier = new File(chemin, "Ocerall.csv");
+            writer = new FileOutputStream(fichier, false);
+            for (String ligne: ligneExterneLue) {
+                writer.write((ligne + "\n").getBytes(StandardCharsets.ISO_8859_1));
+            }
+            writer.close();
+        }
+        catch (Exception e) {
+            erreur = "Erreur de telechargement de fichier global: " + e.getMessage();
+            erreurChargementFichier = true;
+            MainActivity.gestionFichier.EcritLogJelo("Erreur de telechargement de fichier global: " + e.getMessage());
+        }
     }
     //**************************************************
 }
