@@ -4,20 +4,18 @@ import android.os.Environment;
 import android.util.Log;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class GestionFichier
 {
@@ -75,6 +73,7 @@ public class GestionFichier
         ArrayList<ArrayList> listeProduitMachine;
         int valeurCourante;
         Boolean produitTrouv;
+        String[] mots;
 
         // Declaration du fichier
         chemin = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
@@ -93,8 +92,8 @@ public class GestionFichier
                 ligne = bufferedReader.readLine();
                 ligne = bufferedReader.readLine();
                 while(ligne != null) {
-                    String[] mots = ligne.split(";");
-                    if(mots.length != 0) {
+                    mots = ligne.split(";");
+                    if(mots.length == 11) {
                         machineNom = mots[2];
                         machineId = mots[3];
                         produitNom = mots[5];
@@ -241,7 +240,7 @@ public class GestionFichier
             fichier = new File(chemin, "datefichier.jelo");
             writer = new FileOutputStream(fichier);
             LigneCr = RetourneDateCourante() + "\n";
-            writer.write(LigneCr.getBytes());
+            writer.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
             writer.close();
         }
         catch (IOException e) {
@@ -268,7 +267,7 @@ public class GestionFichier
             fichier = new File(chemin, RetourneDateCourante() + "log_jelo.txt");
             writer = new FileOutputStream(fichier, true);
             LigneCr = RetourneHeureCourante() + ": " + lignePass + "\n";
-            writer.write(LigneCr.getBytes());
+            writer.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
             writer.close();
         }
         catch (IOException e) {
@@ -283,7 +282,7 @@ public class GestionFichier
     //**************************************************
     // Telecharge le fichier Ocerall.csv du reseau
     //**************************************************
-    public void TelechargeFichierGlobal(){
+    public void TelechargeFichierGlobal() {
         File fichier;
         FileOutputStream writer;
         File chemin;
@@ -292,6 +291,7 @@ public class GestionFichier
         Thread telechargement = new Thread(new Runnable() {
             public void run() {
                 try {
+                    Log.e("lesmiens", "debut chargement");
                     // Chargement des donnees distantes
                     URL url = new URL("http://192.168.1.44/Ocerall.csv");
                     InputStreamReader inputStreamReader = new InputStreamReader(url.openStream(), StandardCharsets.ISO_8859_1);
@@ -300,8 +300,12 @@ public class GestionFichier
 
                     while((ligneCourante = fluxEntrant.readLine()) != null) {
                         ligneExterneLue.add(ligneCourante);
+                        Log.e("lesmiens", "ligne : " + ligneCourante);
                     }
+                    fluxEntrant.close();
+                    inputStreamReader.close();
                 } catch (Exception e) {
+                    Log.e("lesmiens", "pb lecture");
                     erreur = "Erreur de telechargement de fichier global: " + e.getMessage();
                     erreurChargementFichier = true;
                     MainActivity.gestionFichier.EcritLogJelo("Erreur de telechargement de fichier global: " + e.getMessage());
@@ -324,6 +328,290 @@ public class GestionFichier
             erreurChargementFichier = true;
             MainActivity.gestionFichier.EcritLogJelo("Erreur de telechargement de fichier global: " + e.getMessage());
         }
+    }
+    //**************************************************
+
+    //**************************************************
+    // Ecrit le fichier reprise.jelo
+    //**************************************************
+    public boolean EcritRepriseJelo(char status) {
+        boolean pb = false;
+        File fichier;
+        FileOutputStream writer;
+        String LigneCr;
+        File chemin;
+
+        try {
+            chemin = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            fichier = new File(chemin, "reprise.jelo");
+            writer = new FileOutputStream(fichier, false);
+            if(status == 'R') {
+                LigneCr = "PARAGRAPHE;FINI" + "\n";
+                writer.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            }
+            else {
+                pb = SauveDonneeEnCours(writer);
+                if(MainActivity.gestionDonnees.chargementEnCours == true)
+                    pb = SauveMachineEnCours(writer);
+                LigneCr = "PARAGRAPHE;FIN" + "\n";
+                writer.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            }
+            writer.close();
+        }
+        catch (IOException e) {
+            MainActivity.gestionFichier.EcritLogJelo("pb d'ecriture du fichier de reprise: " + e.getMessage());
+            erreur = "pb d'ecriture du fichier de reprise: " + e.getMessage();
+            pb = true;
+        }
+        return(pb);
+    }
+    //**************************************************
+
+    //**************************************************
+    // Sauvegarde les donnees concernant la machine en cours de chargement
+    //**************************************************
+    public Boolean SauveMachineEnCours(FileOutputStream ecrivain) {
+        String LigneCr;
+        Boolean pb = false;
+
+        try {
+            // Sauvegarde HashMap<String, ArrayList<Integer>> donneeMachine = new HashMap<>();
+            LigneCr = "PARAGRAPHE;donneeMachine" + "\n";
+            ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            for(Map.Entry<String, ArrayList<Integer>> chaqueProduit : MainActivity.gestionDonnees.donneeMachine.entrySet()) {
+                LigneCr = "SOUSPARAGRAPHE;quantite;" + chaqueProduit.getValue().get(0) + ";" +  chaqueProduit.getValue().get(1) + "\n";
+                ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+                LigneCr = "SOUSPARAGRAPHE;produit;" + chaqueProduit.getKey() + "\n";
+                ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            }
+            // Sauvegarde public int quantiteCharge;
+            LigneCr = "SOUSPARAGRAPHE;quantiteCharge;" + MainActivity.gestionDonnees.quantiteCharge + "\n";
+            ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            // Sauvegarde public int quantiteVoulue;
+            LigneCr = "SOUSPARAGRAPHE;quantiteVoulue;" + MainActivity.gestionDonnees.quantiteVoulue + "\n";
+            ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            // Sauvegarde public String idMachineEnCours;
+            LigneCr = "SOUSPARAGRAPHE;idMachineEnCours;" + MainActivity.gestionDonnees.idMachineEnCours + "\n";
+            ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+        }
+        catch (IOException e) {
+            MainActivity.gestionFichier.EcritLogJelo("pb d'ecriture du fichier de reprise: " + e.getMessage());
+            erreur = "pb d'ecriture du fichier de reprise: " + e.getMessage();
+            pb = true;
+        }
+        return(pb);
+    }
+    //**************************************************
+
+    //**************************************************
+    // Sauvegarde les donnees le fichier en cours de traitement
+    //**************************************************
+    public Boolean SauveDonneeEnCours(FileOutputStream ecrivain)
+    {
+        String LigneCr;
+        Boolean pb = false;
+
+        try {
+            // sauvegarde de public HashMap<String, String> listeMachine = new HashMap<>();
+            LigneCr = "PARAGRAPHE;listeMachine" + "\n";
+            ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            for(Map.Entry<String, String> chaqueLigne : MainActivity.gestionDonnees.listeMachine.entrySet()) {
+                LigneCr = chaqueLigne.getKey() + ";" + chaqueLigne.getValue() + "\n";
+                ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            }
+            //Sauvegarde denHashMap<String, String> listeProduit = new HashMap<>();
+            LigneCr = "PARAGRAPHE;listeProduit" + "\n";
+            ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            for(Map.Entry<String, String> chaqueLigne : MainActivity.gestionDonnees.listeProduit.entrySet()) {
+                LigneCr = chaqueLigne.getKey() + ";" + chaqueLigne.getValue() + "\n";
+                ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            }
+            //Sauvegarde ArrayList<String> listeMachineFinis= new ArrayList<>();
+            LigneCr = "PARAGRAPHE;listeMachineFinis" + "\n";
+            ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            for(String chaqueLigne : MainActivity.gestionDonnees.listeMachineFinis) {
+                LigneCr = chaqueLigne + "\n";
+                ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            }
+            //Sauvegarde HashMap<String, String> listeProduitCharges= new HashMap<>();
+            LigneCr = "PARAGRAPHE;listeProduitCharges" + "\n";
+            ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            for(Map.Entry<String, String> chaqueLigne : MainActivity.gestionDonnees.listeProduitCharges.entrySet()) {
+                LigneCr = chaqueLigne.getKey() + ";" + chaqueLigne.getValue() + "\n";
+                ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            }
+            // Dico liste produit dans machine key = id Machine, value = liste (idproduit, qty voulue, qty faite)
+            //Sauvegarde HashMap<String, ArrayList<ArrayList>> remplissageMachine = new HashMap<>();
+            LigneCr = "PARAGRAPHE;remplissageMachine" + "\n";
+            ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            for(Map.Entry<String, ArrayList<ArrayList>> chaqueMachine : MainActivity.gestionDonnees.remplissageMachine.entrySet()) {
+                LigneCr = "SOUSPARAGRAPHE;machineDebut;" + chaqueMachine.getKey() + "\n";
+                ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+                for (ArrayList chaqueProduit : chaqueMachine.getValue()) {
+                    LigneCr = "SOUSPARAGRAPHE;produit;" + chaqueProduit.get(0) + ";" + chaqueProduit.get(1) + "\n";
+                    ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+                }
+                LigneCr = "SOUSPARAGRAPHE;machineFin;" + chaqueMachine.getKey() + "\n";
+                ecrivain.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
+            }
+        }
+        catch (IOException e) {
+            MainActivity.gestionFichier.EcritLogJelo("pb d'ecriture du fichier de reprise: " + e.getMessage());
+            erreur = "pb d'ecriture du fichier de reprise: " + e.getMessage();
+            pb = true;
+        }
+        return(pb);
+    }
+    //**************************************************
+
+    //**************************************************
+    // Lit le fichier de reprise pour la sauveagrde des donnees en cours
+    // retourne :
+    // true = des donnees ont ete chargees, il faut les afficher
+    // false = Aucune donnee on repart a zero
+    //**************************************************
+    public Boolean LitRepriseJelo()
+    {
+        File fichier;
+        boolean pb = false;
+        FileInputStream fileInputStream;
+        InputStreamReader inputStreamReader;
+        BufferedReader bufferedReader;
+        String ligne;
+        File chemin;
+        String sousPartie = "inconnue";
+        String[] mots;
+        ArrayList donneeProduitTampon = new ArrayList<>();
+        ArrayList<ArrayList> donneeMachineTampon = new ArrayList<>();
+
+        chemin = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        fichier = new File(chemin, "reprise.jelo");
+        if (fichier.exists() == true) {
+            //Charge la date courante
+            try {
+                //Creation du stream du fichier
+                fileInputStream = new FileInputStream(fichier);
+                inputStreamReader = new InputStreamReader(fileInputStream, StandardCharsets.ISO_8859_1);
+                bufferedReader = new BufferedReader(inputStreamReader);
+                ligne = bufferedReader.readLine();
+                if(ligne.equals("PARAGRAPHE;FINI") == false) {
+                    MainActivity.gestionDonnees.listeMachineFinis.clear();
+                    MainActivity.gestionDonnees.listeProduitCharges.clear();
+                    MainActivity.gestionDonnees.listeMachine.clear();
+                    MainActivity.gestionDonnees.listeProduit.clear();
+                    MainActivity.gestionDonnees.remplissageMachine.clear();
+                    MainActivity.gestionDonnees.chargementEnCours = false;
+                    pb = true;
+                    while (ligne != null) {
+                        if (ligne.equals("PARAGRAPHE;donneeMachine") == true) {
+                            MainActivity.gestionDonnees.chargementEnCours = true;
+                            MainActivity.gestionDonnees.quantiteVoulue = 0;
+                            MainActivity.gestionDonnees.quantiteCharge = 0;
+                            MainActivity.gestionDonnees.idMachineEnCours = "";
+                            MainActivity.gestionDonnees.donneeMachine.clear();
+                            sousPartie = "donneeMachine";
+                        }
+                        else if (ligne.equals("PARAGRAPHE;FIN" ) == true)
+                            break;
+                        // Lit de public HashMap<String, String> listeMachine = new HashMap<>();
+                        else if (ligne.equals("PARAGRAPHE;listeMachine") == true) {
+                            sousPartie = "listeMachine";
+                        }
+                            //Sauvegarde denHashMap<String, String> listeProduit = new HashMap<>();
+                        else if (ligne.equals("PARAGRAPHE;listeProduit") == true) {
+                            sousPartie = "listeProduit";
+                        }
+                            //Sauvegarde ArrayList<String> listeMachineFinis= new ArrayList<>();
+                        else if (ligne.equals("PARAGRAPHE;listeMachineFinis") == true)
+                            sousPartie = "listeMachineFinis";
+                            //Sauvegarde HashMap<String, String> listeProduitCharges= new HashMap<>();
+                        else if (ligne.equals("PARAGRAPHE;listeProduitCharges") == true)
+                            sousPartie = "listeProduitCharges";
+                            // Dico liste produit dans machine key = id Machine, value = liste (idproduit, qty voulue, qty faite)
+                            //Sauvegarde HashMap<String, ArrayList<ArrayList>> remplissageMachine = new HashMap<>();
+                        else if (ligne.equals("PARAGRAPHE;remplissageMachine") == true) {
+                            sousPartie = "remplissageMachine";
+                        }
+                        else {
+                            switch (sousPartie) {
+                                case "donneeMachine":
+                                    mots = ligne.split(";");
+                                    if (mots.length > 2) {
+                                        if(mots[0].equals("SOUSPARAGRAPHE") == true) {
+                                            // Sauvegarde public int quantiteCharge;
+                                            if(mots[1].equals("quantiteCharge") == true)
+                                                MainActivity.gestionDonnees.quantiteCharge = Integer.parseInt(mots[2]);
+                                            if(mots[1].equals("quantiteVoulue") == true)
+                                                MainActivity.gestionDonnees.quantiteVoulue = Integer.parseInt(mots[2]);
+                                            if(mots[1].equals("idMachineEnCours") == true)
+                                                MainActivity.gestionDonnees.idMachineEnCours = mots[2];
+                                            if(mots[1].equals("quantite") == true && mots.length > 3) {
+                                                donneeProduitTampon = new ArrayList<>();
+                                                donneeProduitTampon.add(Integer.parseInt(mots[2]));
+                                                donneeProduitTampon.add(Integer.parseInt(mots[3]));
+                                            }
+                                            if(mots[1].equals("produit") == true)
+                                                MainActivity.gestionDonnees.donneeMachine.put(mots[2],donneeProduitTampon);
+                                        }
+                                    }
+                                    break;
+                                case "listeMachine":
+                                    // Lit de public HashMap<String, String> listeMachine = new HashMap<>();
+                                    mots = ligne.split(";");
+                                    if (mots.length == 2)
+                                        MainActivity.gestionDonnees.listeMachine.put(mots[0], mots[1]);
+                                    break;
+                                case "listeProduit":
+                                    //Sauvegarde denHashMap<String, String> listeProduit = new HashMap<>();
+                                    mots = ligne.split(";");
+                                    if (mots.length == 2)
+                                        MainActivity.gestionDonnees.listeProduit.put(mots[0], mots[1]);
+                                    break;
+                                case "listeMachineFinis":
+                                    //Sauvegarde ArrayList<String> listeMachineFinis= new ArrayList<>();
+                                    MainActivity.gestionDonnees.listeMachineFinis.add(ligne);
+                                    break;
+                                case "listeProduitCharges":
+                                    //Sauvegarde HashMap<String, String> listeProduitCharges= new HashMap<>();
+                                    mots = ligne.split(";");
+                                    if (mots.length == 2)
+                                        MainActivity.gestionDonnees.listeProduitCharges.put(mots[0], mots[1]);
+                                    break;
+                                case "remplissageMachine":
+                                    // Dico liste produit dans machine key = id Machine, value = liste (idproduit, qty voulue, qty faite)
+                                    //Sauvegarde HashMap<String, ArrayList<ArrayList>> remplissageMachine = new HashMap<>();
+                                    mots = ligne.split(";");
+                                    if (mots.length > 2) {
+                                          if(mots[0].equals("SOUSPARAGRAPHE") == true) {
+                                              if(mots[1].equals("machineDebut") == true)
+                                                  donneeMachineTampon = new ArrayList<>();
+                                              if(mots[1].equals("produit") == true && mots.length == 4) {
+                                                  donneeProduitTampon = new ArrayList<>();
+                                                  donneeProduitTampon.add(mots[2]);
+                                                  donneeProduitTampon.add(Integer.parseInt(mots[3]));
+                                                  donneeMachineTampon.add(donneeProduitTampon);
+                                              }
+                                              if(mots[1].equals("machineFin") == true)
+                                                  MainActivity.gestionDonnees.remplissageMachine.put(mots[2],donneeMachineTampon);
+                                          }
+                                    }
+                                    break;
+                            }
+                        }
+                        ligne = bufferedReader.readLine();
+                    }
+                }
+                fileInputStream.close();
+                inputStreamReader.close();
+                bufferedReader.close();
+            }
+            catch (IOException e) {
+                MainActivity.gestionFichier.EcritLogJelo("pb de lecture du fichier de reprise: " + e.getMessage());
+                erreur = "pb de lecture du fichier de reprise: " + e.getMessage();
+                pb = false;
+            }
+        }
+        return(pb);
     }
     //**************************************************
 }

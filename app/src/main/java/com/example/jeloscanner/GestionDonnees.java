@@ -14,12 +14,17 @@ public class GestionDonnees
     public HashMap<String, String> listeMachine = new HashMap<>();
     // Dico liste produit key = id produit, value = nom produit
     public HashMap<String, String> listeProduit = new HashMap<>();
-    // Dico liste produit dans machine key = id Machine, value = liste (idproduit, qty voulue, qty faite)
+    // Dico liste produit dans machine key = id Machine, value = liste (idproduit, qty voulue)
     public HashMap<String, ArrayList<ArrayList>> remplissageMachine = new HashMap<>();
+    // Liste des machines deja chargées et terminées  A SAUVEGARDER
+    public ArrayList<String> listeMachineFinis= new ArrayList<>();
+    // Liste des produits chargés pour evité les doublons key = numOrdreProduit value = idMachine ou il a ete chargé  A SAUVEGARDER
+    public HashMap<String, String> listeProduitCharges= new HashMap<>();
+    // Etat de chargement en cours ou non A SAUVEGARDER
+    public Boolean chargementEnCours = false;
     //**************************************************
     // LISTES ASSOCIEES AU CHARGEMENT D'UNE MACHINE
     //**************************************************
-    // liste des produits et quantité a charger pour la machine courante A SAUVEGARDER
     // key = produit, value = Liste (Qty a chargée, qty deja faite)
     public HashMap<String, ArrayList<Integer>> donneeMachine = new HashMap<>();
     // Liste des text view de quantite et des bord de chaque produit
@@ -30,15 +35,6 @@ public class GestionDonnees
     public int quantiteVoulue;
     // Id de la machine en cours A SAUVEGARDER
     public String idMachineEnCours;
-    //**************************************************
-    // LISTES GLOBALES DE L ETAT D'AVANCEMENT DU CHARGEMENT
-    //**************************************************
-    // Liste des machines deja chargées et terminées  A SAUVEGARDER
-    public ArrayList<String> listeMachineFinis= new ArrayList<>();
-    // Liste des produits chargés pour evité les doublons key = numOrdreProduit value = idMachine ou il a ete chargé  A SAUVEGARDER
-    public HashMap<String, String> listeProduitCharges= new HashMap<>();
-    // Etat de chargement en cours ou non A SAUVEGARDER
-    public Boolean chargementEnCours = false;
     //**************************************************
     // VARIABLES DE l'ENCOURS
     //**************************************************
@@ -56,7 +52,6 @@ public class GestionDonnees
     public int produitProblemeCouleur = -65022;
     // vert clair
     public int produitFinieCouleur = -9830634;
-
     GestionDonnees()
     {
     }
@@ -66,6 +61,9 @@ public class GestionDonnees
     //**************************************************
     public void RemetZeroDonnees()
     {
+        listeMachine.clear();
+        listeProduit.clear();
+        remplissageMachine.clear();
         listeMachineFinis.clear();
         listeProduitCharges.clear();
         chargementEnCours = false;
@@ -217,8 +215,6 @@ public class GestionDonnees
                 // Ce produit n'a pas deja ete charge
                 if(listeProduitCharges.containsKey(numOrdreProduitRecu) == false) {
                     // Ce produit n'a pas atteint le max de chargement le concernant
-                    int toto = donneeMachine.get(idProduitRecu).get(0);
-                    int tata = donneeMachine.get(idProduitRecu).get(1);
                     if(donneeMachine.get(idProduitRecu).get(0) > donneeMachine.get(idProduitRecu).get(1)) {
                         // Ajoute une produit charge
                         donneeMachine.get(idProduitRecu).set(1, donneeMachine.get(idProduitRecu).get(1) + 1);
@@ -254,7 +250,7 @@ public class GestionDonnees
     //**************************************************
 
     //**************************************************
-    // Demarrage de chargement d'une machine
+    // Demarrage de chargement d'une machine et affichage des produits a charger
     //**************************************************
     public void DemarrageChargementmachine(String machineIdPass)
     {
@@ -268,6 +264,7 @@ public class GestionDonnees
         chargementEnCours = true;
         idMachineEnCours = machineIdPass;
         listeViewProduit.clear();
+
         for (ArrayList produitPresent : remplissageMachine.get(machineIdPass)) {
             // sort le nom et la quantité de produit
             produ = (String)produitPresent.get(0);
@@ -292,7 +289,7 @@ public class GestionDonnees
     //**************************************************
     // Arret de chargement d'une machine
     //**************************************************
-    public void ArretChargementmachine()
+    public void ChargementmachineFini()
     {
         chargementEnCours = false;
         listeMachineFinis.add(idMachineEnCours);
@@ -300,7 +297,7 @@ public class GestionDonnees
     //**************************************************
 
     //**************************************************
-    // Ajoute Les views concernant ce produit pour utilisation ulterieur
+    // Sauvegarde Les views concernant ce produit pour utilisation ulterieur
     //**************************************************
     public void SauveViewProduit(String idProduitPass, GradientDrawable bordPass, TextView textViewPass, int couleurPass)
     {

@@ -138,7 +138,7 @@ public class ServicePrincipal extends IntentService
                                 break;
                             case 'G':
                                 MainActivity.gestionFichier.EcritLogJelo("Le produit: " + MainActivity.gestionDonnees.idProduit + "a ete chargé et le chargement de la machine: " + MainActivity.gestionDonnees.idMachineEnCours + "est fini");
-                                MainActivity.gestionDonnees.ArretChargementmachine();
+                                MainActivity.gestionDonnees.ChargementmachineFini();
                                 MainActivity.gestionAffichage.ChangeQuantiteProduit(MainActivity.gestionDonnees.idProduit);
                                 MainActivity.gestionAffichage.ChangeLigneCouleur(MainActivity.gestionDonnees.idProduit, MainActivity.gestionDonnees.produitFinieCouleur);
                                 MainActivity.gestionAffichage.NomMachineChangeCouleur('F');

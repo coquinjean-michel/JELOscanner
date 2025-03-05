@@ -59,10 +59,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     protected void onPause(Bundle savedInstanceState) {
+        if(MainActivity.gestionDonnees.listeMachine.size() > MainActivity.gestionDonnees.listeMachineFinis.size())
+            MainActivity.gestionFichier.EcritRepriseJelo('C');
+        else
+            MainActivity.gestionFichier.EcritRepriseJelo('F');
         stopService(intentPerso);
     }
 
     public void FermeLeProgramme() {
+        if(MainActivity.gestionDonnees.listeMachine.size() > MainActivity.gestionDonnees.listeMachineFinis.size())
+            MainActivity.gestionFichier.EcritRepriseJelo('C');
+        else
+            MainActivity.gestionFichier.EcritRepriseJelo('F');
         MainActivity.gestionFichier.EcritLogJelo("*** FERMETURE DU PROGRAMME ***");
         stopService(intentPerso);
         finish();
@@ -100,8 +108,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             apparenceDialogue.setPositiveButton("OUI", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
                     TelechargementFichierGlobal(false);
-                    MainActivity.gestionAffichage.RemetEcranZero();
-                    MainActivity.gestionDonnees.RemetZeroDonnees();
                     dialog.cancel();
                 }
             });
@@ -206,11 +212,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MainActivity.gestionFichier.TelechargeFichierGlobal();
         if(MainActivity.gestionFichier.erreurChargementFichier == true)
             DialogueErreurCritique("Impossible de telecharger le fichier global: ", gestionFichier.erreur);
-        if(gestionFichier.EcritDateFichier() == true) {
-            DialogueErreurCritique("Probleme de fichier", gestionFichier.erreur);
-        }
         else {
-            LectureFichierGlobal(demarreService);
+            if(gestionFichier.EcritDateFichier() == true) {
+                DialogueErreurCritique("Probleme de fichier", gestionFichier.erreur);
+            }
+            else {
+                MainActivity.gestionAffichage.RemetEcranZero();
+                MainActivity.gestionDonnees.RemetZeroDonnees();
+                MainActivity.gestionFichier.EcritRepriseJelo('F');
+                LectureFichierGlobal(demarreService);
+            }
         }
     }
     //**************************************************
@@ -230,15 +241,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         else {
             if(demarreService == true)
-                ChargeAfficheEnCours();
+                RechargementReprise();
         }
+    }
+    //**************************************************
+
+    //**************************************************
+    // Rechargement des donnees de reprise
+    //**************************************************
+    private void RechargementReprise()
+    {
+        if(MainActivity.gestionFichier.LitRepriseJelo() == true) {
+            if(MainActivity.gestionDonnees.chargementEnCours == true) {
+                MainActivity.gestionAffichage.AfficheLesProduits();
+                MainActivity.gestionAffichage.RemetVertLigneFinis();
+            }
+        }
+        DemarrageService();
     }
     //**************************************************
 
     //**************************************************
     // Telechargement et chargement des en cours
     //**************************************************
-    private void ChargeAfficheEnCours()
+    private void DemarrageService()
     {
         // CHARGEMENT D'UN ENCOURS SI EXISTE
         MainActivity.gestionFichier.EcritLogJelo("Demarrage du chargement");

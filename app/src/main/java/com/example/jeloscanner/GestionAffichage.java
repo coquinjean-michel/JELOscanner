@@ -96,6 +96,33 @@ public class GestionAffichage
     //**************************************************
 
     //**************************************************
+    // Emet en vert les lignes des produits terminés
+    //**************************************************
+    public void RemetVertLigneFinis()
+    {
+        notifHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                GradientDrawable bordInter;
+
+                try{
+                    for (Map.Entry<String, ArrayList<Integer>> chaqueProduit : MainActivity.gestionDonnees.donneeMachine.entrySet()) {
+                        if(chaqueProduit.getValue().get(0) == chaqueProduit.getValue().get(1) ) {
+                            MainActivity.gestionDonnees.listeViewProduit.get(chaqueProduit.getKey()).set(2,'F');
+                            bordInter = (GradientDrawable)MainActivity.gestionDonnees.listeViewProduit.get(chaqueProduit.getKey()).get(0);
+                            bordInter.setColor(MainActivity.gestionDonnees.produitFinieCouleur);
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    MainActivity.gestionFichier.EcritLogJelo("Erreur durant l'affichage en vert des lignes finies': " + e.getMessage());
+                }
+            }
+        });
+    }
+    //**************************************************
+
+    //**************************************************
     // Efface l'ecran et remet a zero l'affichage
     //**************************************************
     public void RemetEcranZero()
@@ -112,7 +139,7 @@ public class GestionAffichage
     //**************************************************
 
     //**************************************************
-    // Reset les couleurs des lignes
+    // Reset les couleurs des lignes par defaut, sauf celles qui sont en vert
     //**************************************************
     public void RemetCouleurLignePardefaut()
     {
@@ -272,7 +299,7 @@ public class GestionAffichage
                 questionFinChargement.setPositiveButton("OUI", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         MainActivity.gestionFichier.EcritLogJelo("Le chargement de la machine id = " + MainActivity.gestionDonnees.idMachineEnCours + " n'a pas ete terminé");
-                        MainActivity.gestionDonnees.ArretChargementmachine();
+                        MainActivity.gestionDonnees.ChargementmachineFini();
                         MainActivity.gestionDonnees.DemarrageChargementmachine(nouvelleIdMachine);
                         AfficheLesProduits();
                         dialog.cancel();
