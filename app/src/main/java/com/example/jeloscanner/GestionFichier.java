@@ -102,6 +102,7 @@ public class GestionFichier
                             quantiteVoulue = Integer.parseInt(mots[10]);
                         else
                             quantiteVoulue = 0;
+                        for(String tout : mots)
                         if(machineId.equals("") == false)
                         {
                             if(MainActivity.gestionDonnees.listeMachine.containsKey(machineId) == false) {
@@ -345,8 +346,8 @@ public class GestionFichier
             chemin = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
             fichier = new File(chemin, "reprise.jelo");
             writer = new FileOutputStream(fichier, false);
-            if(status == 'R') {
-                LigneCr = "PARAGRAPHE;FINI" + "\n";
+            if(status == 'F') {
+                LigneCr = "PARAGRAPHE;TERMINE" + "\n";
                 writer.write(LigneCr.getBytes(StandardCharsets.ISO_8859_1));
             }
             else {
@@ -494,7 +495,7 @@ public class GestionFichier
                 inputStreamReader = new InputStreamReader(fileInputStream, StandardCharsets.ISO_8859_1);
                 bufferedReader = new BufferedReader(inputStreamReader);
                 ligne = bufferedReader.readLine();
-                if(ligne.equals("PARAGRAPHE;FINI") == false) {
+                if(ligne.equals("PARAGRAPHE;TERMINE") == false) {
                     MainActivity.gestionDonnees.listeMachineFinis.clear();
                     MainActivity.gestionDonnees.listeProduitCharges.clear();
                     MainActivity.gestionDonnees.listeMachine.clear();
